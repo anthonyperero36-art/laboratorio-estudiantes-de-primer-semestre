@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador de equipos de laboratorio</title>
+<style>
+:root{--bg:#eef3f8;--card:#fff;--tx:#14202e;--mut:#5a6a7d;--bd:#d6dfea;--ac:#0d9488;--ac2:#2563eb;--acx:#fff;--ok:#15803d;--bad:#b91c1c;--warn:#b45309;--fill:#e8f6f4;--sh:0 6px 20px rgba(20,40,70,.10);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e131b;--card:#17202c;--tx:#e8eef6;--mut:#93a3b8;--bd:#273445;--ac:#2dd4bf;--ac2:#60a5fa;--acx:#04201c;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--fill:#10302d;--sh:0 6px 20px rgba(0,0,0,.4);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e131b;--card:#17202c;--tx:#e8eef6;--mut:#93a3b8;--bd:#273445;--ac:#2dd4bf;--ac2:#60a5fa;--acx:#04201c;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--fill:#10302d;--sh:0 6px 20px rgba(0,0,0,.4);color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.hero{background:linear-gradient(135deg,#0f766e,#2563eb 60%,#7c3aed);color:#fff;padding:28px 18px 56px;text-align:center}
+.hero h1{margin:0;font-size:1.7rem}.hero p{margin:.4em auto 0;max-width:560px;opacity:.92}
+main{max-width:920px;margin:-36px auto 0;padding:0 14px 24px}
+h2{font-size:1.15rem;margin:0 0 .3em}h3{font-size:1rem;margin:.8em 0 .3em}p{margin:.3em 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.eq{background:var(--card);border-radius:16px;padding:14px;box-shadow:var(--sh);border:1px solid var(--bd);cursor:pointer;transition:transform .15s;text-align:left;font:inherit;color:inherit}
+.eq:hover{transform:translateY(-4px)}
+.ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:1.7rem;color:#fff;margin-bottom:8px}
+.eq b{display:block}.eq small{color:var(--mut)}.eq .go{color:var(--ac);font-weight:600;font-size:.85rem;margin-top:6px;display:block}
+.sect-t{margin:22px 4px 8px;font-size:1.1rem;font-weight:700}
+nav{display:flex;gap:6px;overflow-x:auto;margin:6px 0 12px;padding:2px}
+nav button{flex:0 0 auto;padding:9px 16px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:999px;cursor:pointer;font:inherit;box-shadow:var(--sh)}
+nav button.on{background:linear-gradient(135deg,var(--ac),var(--ac2));color:var(--acx);border-color:transparent;font-weight:600}
+section.sim{display:none;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:16px;box-shadow:var(--sh)}
+section.sim.on{display:block}
+.uso{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:12px}
+.uso>div{background:var(--fill);border-radius:12px;padding:10px 12px;border:1px solid var(--bd)}
+.uso ol,.uso ul{margin:.2em 0;padding-left:1.2em;font-size:.92rem}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:8px 0}
+label{font-size:.9rem;color:var(--mut)}
+select,input[type=number]{padding:6px 8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+input[type=range]{width:170px;accent-color:var(--ac)}
+.btn{padding:9px 16px;border-radius:10px;border:0;background:linear-gradient(135deg,var(--ac),var(--ac2));color:var(--acx);cursor:pointer;font:inherit;font-weight:600}
+.btn.sec{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+.msg{margin-top:10px;padding:11px 13px;border-radius:12px;background:var(--fill);border:1px solid var(--bd);min-height:46px}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.stage{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;align-items:center}
+.gauges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.g{border:1px solid var(--bd);border-radius:12px;padding:8px;background:var(--bg);text-align:center}
+.g b{font-size:1.2rem;display:block}.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden;margin-top:5px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f59e0b,#ef4444)}
+.pt i{background:linear-gradient(90deg,#38bdf8,#2563eb)}
+svg{max-width:100%;display:block;margin:auto}
+.scope{width:250px;height:250px;border-radius:50%;overflow:hidden;border:10px solid #334155;box-shadow:inset 0 0 30px #000a,var(--sh);margin:auto;position:relative;background:#fdf2f8}
+.scope:after{content:"";position:absolute;inset:0;background:radial-gradient(circle,transparent 55%,#0007)}
+.puff{opacity:0}.steam .puff{animation:pf 1.8s infinite}.steam .puff:nth-child(2){animation-delay:.6s}.steam .puff:nth-child(3){animation-delay:1.2s}
+@keyframes pf{0%{opacity:.8;transform:translateY(0) scale(.6)}100%{opacity:0;transform:translateY(-34px) scale(1.4)}}
+@keyframes sp{to{transform:rotate(360deg)}}
+.info{font-size:.85rem;color:var(--mut);margin-top:10px}
+</style>
+</head>
+<body>
+<div class="hero"><h1>🔬 Simulador de equipos de laboratorio</h1><p>Conoce cada equipo, aprende cómo se usa y practica sin riesgo. Empieza por el resumen y luego entra al simulador.</p></div>
+<main>
+<div class="sect-t">1. Resumen de los equipos</div>
+<div class="grid" id="cards"></div>
+<div class="sect-t" id="simtop">2. Uso y simulación</div>
+<nav id="tabs"></nav>
+
+<section class="sim" id="autoclave">
+<h2>♨️ Autoclave</h2><div class="uso" data-k="autoclave"></div>
+<div class="stage">
+<svg viewBox="0 0 240 200" width="240" height="200" role="img" aria-label="Autoclave">
+<defs><linearGradient id="gm" x1="0" x2="1"><stop offset="0" stop-color="#94a3b8"/><stop offset=".5" stop-color="#e2e8f0"/><stop offset="1" stop-color="#64748b"/></linearGradient><linearGradient id="gt" x1="0" y1="1" y2="0"><stop offset="0" stop-color="#f97316"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs>
+<rect x="30" y="50" width="150" height="130" rx="18" fill="url(#gm)" stroke="#475569" stroke-width="2"/>
+<circle cx="105" cy="115" r="42" fill="#0f172a" stroke="#475569" stroke-width="4"/>
+<clipPath id="cw"><circle cx="105" cy="115" r="38"/></clipPath>
+<rect id="a-fl" x="60" y="153" width="90" height="0" fill="url(#gt)" clip-path="url(#cw)" opacity=".85"/>
+<rect x="190" y="70" width="8" height="40" rx="3" fill="#475569"/>
+<g class="steam" id="a-st"><circle class="puff" cx="105" cy="38" r="8" fill="#cbd5e1"/><circle class="puff" cx="118" cy="38" r="7" fill="#cbd5e1"/><circle class="puff" cx="92" cy="38" r="7" fill="#cbd5e1"/></g>
+<circle cx="205" cy="32" r="26" fill="#f8fafc" stroke="#475569" stroke-width="3"/>
+<line id="a-nd" x1="205" y1="32" x2="205" y2="12" stroke="#dc2626" stroke-width="3" stroke-linecap="round" style="transform-origin:205px 32px;transform:rotate(-60deg);transition:transform .2s"/>
+<text x="205" y="62" text-anchor="middle" font-size="9" fill="currentColor">psi</text></svg>
+<div><div class="gauges"><div class="g">Temp.<b id="a-t">25 °C</b><div class="bar"><i id="a-tb"></i></div></div>
+<div class="g">Presión<b id="a-p">0 psi</b><div class="bar pt"><i id="a-pb"></i></div></div>
+<div class="g">Fase<b id="a-ph" style="font-size:.95rem">Lista</b><small id="a-clock"></small></div></div></div></div>
+<div class="row"><label>Material <select id="a-mat"><option value="15">Vidrio vacío (mín. 15 min)</option><option value="20">Medio líquido (mín. 20 min)</option><option value="30">Desechos biológicos (mín. 30 min)</option></select></label>
+<label>Tiempo (min) <input type="number" id="a-time" value="15" min="5" max="60" style="width:70px"></label>
+<label>Carga <span id="a-lv">50</span>% <input type="range" id="a-load" min="10" max="100" value="50"></label></div>
+<div class="row"><label><input type="checkbox" id="a-water" checked> Nivel de agua verificado</label><label><input type="checkbox" id="a-tape" checked> Cinta indicadora</label></div>
+<div class="row"><button class="btn" id="a-start">▶ Iniciar ciclo</button><button class="btn sec" id="a-open">Abrir puerta</button><button class="btn sec" id="a-reset">Reiniciar</button></div>
+<div class="msg" id="a-msg">Configura el ciclo y pulsa “Iniciar”. El tiempo está acelerado.</div>
+<p class="info">Referencia: 121 °C, 15 psi, vapor saturado, 15 a 30 min según la carga (guías de MIT, LSU, U. de Kentucky y Carleton).</p>
+</section>
+
+<section class="sim" id="centri">
+<h2>🌀 Centrífuga</h2><div class="uso" data-k="centri"></div>
+<svg id="c-rotor" viewBox="-115 -115 230 230" width="240" height="240" role="img" aria-label="Rotor"></svg>
+<div class="row" style="justify-content:center"><span id="c-lid" class="warn">Tapa: abierta</span></div>
+<div class="row"><label>Velocidad <span id="c-rv">3000</span> rpm <input type="range" id="c-rpm" min="500" max="6000" step="500" value="3000"></label>
+<label>Tiempo (s) <input type="number" id="c-time" value="6" min="2" max="20" style="width:70px"></label></div>
+<div class="row"><button class="btn" id="c-start">▶ Iniciar</button><button class="btn sec" id="c-clear">Vaciar rotor</button></div>
+<div class="msg" id="c-msg">Haz clic en los espacios del rotor para colocar tubos (deben quedar enfrentados).</div>
+</section>
+
+<section class="sim" id="pipeta">
+<h2>💧 Micropipeta</h2><div class="uso" data-k="pipeta"></div>
+<div class="msg" id="p-task"></div>
+<div class="stage">
+<svg viewBox="0 0 330 170" width="330" height="170" role="img" aria-label="Pipeta y tubos">
+<defs><linearGradient id="gl" x1="0" y1="0" y2="1"><stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs>
+<g id="p-pip"><rect x="140" y="2" width="22" height="14" rx="4" fill="#ef4444" id="p-pl" style="transition:transform .3s"/><rect x="132" y="16" width="38" height="70" rx="10" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/><rect x="146" y="86" width="10" height="40" fill="#94a3b8"/><polygon points="147,126 155,126 152,150 150,150" fill="#cbd5e1" stroke="#64748b"/></g>
+<rect x="20" y="70" width="60" height="90" rx="10" fill="none" stroke="currentColor" stroke-width="2"/><rect id="p-src" x="22" y="92" width="56" height="66" rx="8" fill="url(#gl)" opacity=".75"/>
+<rect x="250" y="70" width="60" height="90" rx="10" fill="none" stroke="currentColor" stroke-width="2"/><rect id="p-dst" x="252" y="158" width="56" height="0" fill="url(#gl)" opacity=".75"/>
+<text x="50" y="62" text-anchor="middle" font-size="11" fill="currentColor">Origen</text><text x="280" y="62" text-anchor="middle" font-size="11" fill="currentColor">Destino</text></svg>
+<div><div class="row"><label>Pipeta <select id="p-sel"><option value="20">P20 (2–20 µL)</option><option value="200">P200 (20–200 µL)</option><option value="1000">P1000 (100–1000 µL)</option></select></label>
+<label>Volumen (µL) <input type="number" id="p-vol" value="10" min="1" max="1000" style="width:80px"></label></div><button class="btn sec" id="p-new">Nueva tarea</button></div></div>
+<div class="row" id="p-steps"></div>
+<div class="msg" id="p-msg">Elige la pipeta, ajusta el volumen y sigue los pasos en orden.</div>
+</section>
+
+<section class="sim" id="micro">
+<h2>🔭 Microscopio óptico</h2><div class="uso" data-k="micro"></div>
+<div class="scope"><svg id="m-view" viewBox="-100 -100 200 200" width="100%" height="100%"></svg></div>
+<p class="info" style="text-align:center" id="m-mag"></p>
+<div class="row" style="justify-content:center"><label>Objetivo <select id="m-obj"><option value="4">4x (barrido)</option><option value="10">10x</option><option value="40">40x</option><option value="100">100x (inmersión)</option></select></label>
+<label><input type="checkbox" id="m-oil"> Aceite de inmersión</label><label>Enfoque <input type="range" id="m-foc" min="0" max="100" value="10"></label></div>
+<div class="msg" id="m-msg"></div>
+</section>
+<p class="info">Entrenamiento previo: no reemplaza la capacitación con tu docente ni el manual del equipo.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const EQ=[
+["autoclave","♨️","Autoclave","linear-gradient(135deg,#f97316,#ef4444)","Esteriliza con vapor a presión.","Material de vidrio, medios y desechos biológicos.",
+ ["Verifica el nivel de agua y no sobrecargues la cámara.","Coloca cinta indicadora y deja la carga floja.","Selecciona el ciclo: 121 °C, 15 psi y el tiempo del material.","Espera a presión cero antes de abrir; usa guantes térmicos.","Registra el ciclo en la bitácora."],
+ ["Nunca abras la puerta con presión.","No esterilices solventes ni plásticos no aptos.","No mezcles material limpio con contaminado."]],
+["centri","🌀","Centrífuga","linear-gradient(135deg,#8b5cf6,#2563eb)","Separa componentes de una muestra por densidad.","Sangre, cultivos, precipitados y suspensiones.",
+ ["Rotula los tubos y iguala sus volúmenes.","Colócalos enfrentados (simétricos) en el rotor.","Cierra la tapa y fija rpm y tiempo.","Inicia y espera a que el rotor se detenga por completo.","Retira los tubos sin agitarlos."],
+ ["Un rotor desbalanceado vibra y se daña.","No frenes el rotor con la mano.","No excedas las rpm máximas del rotor."]],
+["pipeta","💧","Micropipeta","linear-gradient(135deg,#06b6d4,#2563eb)","Mide y transfiere volúmenes muy pequeños.","Reacciones, diluciones, PCR y reactivos.",
+ ["Escoge la pipeta cuyo rango contenga tu volumen.","Ajusta el volumen y coloca una punta nueva.","Presiona hasta el primer tope y sumerge unos milímetros.","Suelta despacio y dispensa hasta el segundo tope.","Expulsa la punta al desecho."],
+ ["No uses volúmenes fuera de rango.","No inclines la pipeta con líquido.","No gires el selector más allá de los límites."]],
+["micro","🔭","Microscopio","linear-gradient(135deg,#10b981,#0d9488)","Amplía muestras para observar células y microorganismos.","Frotis, cortes histológicos y cultivos teñidos.",
+ ["Carga el equipo con ambas manos y enciende la luz.","Empieza con el objetivo de menor aumento (4x).","Enfoca con el macrométrico y afina con el micrométrico.","Sube de objetivo y reajusta el enfoque.","Solo a 100x aplica aceite; al final limpia con papel óptico."],
+ ["No uses el macrométrico con 40x o 100x.","No toques los lentes con los dedos.","Guarda con el objetivo de 4x."]]];
+$("cards").innerHTML=EQ.map(e=>`<button class="eq" data-id="${e[0]}"><div class="ic" style="background:${e[3]}">${e[1]}</div><b>${e[2]}</b><small>${e[4]}<br>Se usa en: ${e[5]}</small><span class="go">Ver uso y simular →</span></button>`).join("");
+document.querySelectorAll(".uso").forEach(u=>{const e=EQ.find(x=>x[0]===u.dataset.k);u.innerHTML=`<div><b>Cómo se usa</b><ol>${e[6].map(s=>`<li>${s}</li>`).join("")}</ol></div><div><b>⚠ Precauciones</b><ul>${e[7].map(s=>`<li>${s}</li>`).join("")}</ul></div>`});
+EQ.forEach(e=>{const b=document.createElement("button");b.textContent=e[1]+" "+e[2];b.dataset.id=e[0];$("tabs").appendChild(b)});
+function show(id,sc){document.querySelectorAll("section.sim").forEach(s=>s.classList.toggle("on",s.id===id));document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.id===id));if(sc)$("simtop").scrollIntoView()}
+$("tabs").onclick=e=>{if(e.target.dataset.id)show(e.target.dataset.id)};
+$("cards").onclick=e=>{const c=e.target.closest(".eq");if(c)show(c.dataset.id,1)};
+const h=(location.hash||"").slice(1);show(EQ.some(e=>e[0]===h)?h:"autoclave");
+function say(id,t,c){const e=$(id);e.className="msg "+(c||"");e.textContent=t}
+
+/* AUTOCLAVE */
+let A={ph:"idle",t:25,p:0,hold:0,req:15,timer:null};
+$("a-mat").onchange=()=>$("a-time").value=$("a-mat").value;
+$("a-load").oninput=()=>$("a-lv").textContent=$("a-load").value;
+function aShow(){$("a-t").textContent=Math.round(A.t)+" °C";$("a-p").textContent=A.p.toFixed(1)+" psi";
+$("a-tb").style.width=Math.min(100,(A.t-25)/96*100)+"%";$("a-pb").style.width=Math.min(100,A.p/15*100)+"%";
+const f=Math.min(70,(A.t-25)/96*70);$("a-fl").setAttribute("height",f);$("a-fl").setAttribute("y",153-f);
+$("a-nd").style.transform="rotate("+(-60+A.p/15*120)+"deg)";$("a-st").classList.toggle("steam",A.ph==="hold"||A.ph==="exh");
+$("a-ph").textContent={idle:"Lista",heat:"Calentando",hold:"Esterilizando",exh:"Despresurizando",done:"Terminado"}[A.ph];
+$("a-clock").textContent=A.ph==="hold"?A.hold.toFixed(1)+" min":""}
+$("a-start").onclick=()=>{if(A.ph!=="idle")return;
+ if(!$("a-water").checked){say("a-msg","Error: verifica el nivel de agua antes de iniciar.","bad");return}
+ const load=+$("a-load").value;A.req=+$("a-mat").value+(load>80?10:0);A.hold=0;A.ph="heat";say("a-msg","Cámara cerrada. Generando vapor…");
+ A.timer=setInterval(()=>{
+  if(A.ph==="heat"){A.t+=load>80?2.4:3;A.p=Math.max(0,(A.t-100)/21*15);if(A.t>=121){A.t=121;A.p=15;A.ph="hold"}}
+  else if(A.ph==="hold"){A.hold+=.5;if(A.hold>=+$("a-time").value)A.ph="exh"}
+  else if(A.ph==="exh"){A.t=Math.max(25,A.t-2);A.p=Math.max(0,A.p-.5);if(A.p===0){clearInterval(A.timer);A.ph="done";aEnd()}}
+  aShow()},120)};
+function aEnd(){const t=+$("a-time").value;
+ if(t<A.req)say("a-msg","Ciclo FALLIDO: "+t+" min no bastan; se requieren al menos "+A.req+" min"+(+$("a-load").value>80?" (carga grande)":"")+". Repite el ciclo completo.","bad");
+ else if(!$("a-tape").checked)say("a-msg","Ciclo completo, pero sin cinta indicadora no puedes verificarlo. Colócala en cada carga.","warn");
+ else say("a-msg","Ciclo exitoso: 121 °C, 15 psi y "+t+" min. Presión en cero: abre con guantes térmicos y registra el ciclo.","ok");aShow()}
+$("a-open").onclick=()=>{if(A.ph==="done"){say("a-msg","Puerta abierta con cuidado. Espera antes de sacar el material caliente.","ok");A.ph="idle";A.t=25;aShow()}
+ else if(A.ph==="idle")say("a-msg","La puerta ya está accesible. Carga el material.");
+ else say("a-msg","PELIGRO: puerta bloqueada. No se abre hasta que la presión sea cero.","bad")};
+$("a-reset").onclick=()=>{clearInterval(A.timer);A={ph:"idle",t:25,p:0,hold:0,req:15,timer:null};aShow();say("a-msg","Simulación reiniciada.")};aShow();
+
+/* CENTRIFUGA */
+const N=8;let slots=Array(N).fill(false),spin=false;
+function cDraw(){let s='<defs><radialGradient id="rg"><stop offset="0" stop-color="#cbd5e1"/><stop offset="1" stop-color="#64748b"/></radialGradient></defs><circle r="108" fill="#1e293b"/><g id="c-g"><circle r="96" fill="url(#rg)"/>';
+ for(let i=0;i<N;i++){const a=i*Math.PI/4,x=Math.cos(a)*64,y=Math.sin(a)*64;s+=`<circle data-i="${i}" cx="${x}" cy="${y}" r="17" fill="${slots[i]?'#ef4444':'#0f172a55'}" stroke="#0f172a" stroke-width="2" style="cursor:pointer"/>`}
+ $("c-rotor").innerHTML=s+'</g><circle r="8" fill="#0f172a"/>'}
+$("c-rotor").onclick=e=>{const i=e.target.dataset&&e.target.dataset.i;if(i===undefined||spin)return;slots[+i]=!slots[+i];cDraw()};
+$("c-rpm").oninput=()=>$("c-rv").textContent=$("c-rpm").value;
+$("c-clear").onclick=()=>{if(!spin){slots.fill(false);cDraw()}};
+$("c-start").onclick=()=>{if(spin)return;
+ if(!slots.some(x=>x)){say("c-msg","Coloca al menos un par de tubos.","warn");return}
+ if(!slots.every((v,i)=>v===slots[(i+4)%8])){say("c-msg","DESBALANCEADO: la centrífuga vibraría y podría dañarse. Coloca los tubos enfrentados.","bad");return}
+ spin=true;const g=$("c-g"),rpm=+$("c-rpm").value;g.style.transformOrigin="0 0";g.style.animation=`sp ${Math.max(.12,240/rpm)}s linear infinite`;
+ $("c-lid").textContent="Tapa: cerrada y bloqueada";$("c-lid").className="bad";say("c-msg","Centrifugando a "+rpm+" rpm… no abras la tapa.");
+ setTimeout(()=>{g.style.animation="";spin=false;$("c-lid").textContent="Tapa: abierta";$("c-lid").className="ok";say("c-msg","Rotor detenido. Ya puedes retirar los tubos con cuidado.","ok")},+$("c-time").value*1000)};cDraw();
+
+/* MICROPIPETA */
+const rng={20:[2,20],200:[20,200],1000:[100,1000]},stp=["1. Colocar punta","2. Primer tope","3. Sumergir y soltar","4. Dispensar (2.º tope)","5. Expulsar punta"];let P={target:0,step:0};
+function pNew(){P.target=[5,15,50,120,350,800][Math.floor(Math.random()*6)];P.step=0;$("p-task").textContent="Tarea: transferir "+P.target+" µL del origen al destino.";
+ $("p-src").setAttribute("y",92);$("p-src").setAttribute("height",66);$("p-dst").setAttribute("height",0);$("p-dst").setAttribute("y",158);$("p-pl").style.transform="";say("p-msg","Elige la pipeta, ajusta el volumen y sigue los pasos en orden.")}
+$("p-steps").innerHTML=stp.map((s,i)=>`<button class="btn sec" data-s="${i}">${s}</button>`).join("");$("p-new").onclick=pNew;
+$("p-steps").onclick=e=>{const k=e.target.dataset.s;if(k===undefined)return;const i=+k,pip=+$("p-sel").value,v=+$("p-vol").value,[lo,hi]=rng[pip];
+ if(i!==P.step){say("p-msg","Orden incorrecto. Siguiente paso: "+stp[P.step],"bad");return}
+ if(i===0){if(v<lo||v>hi){say("p-msg","El volumen "+v+" µL está fuera del rango de la P"+pip+" ("+lo+"–"+hi+" µL). Dañarías el mecanismo.","bad");return}
+  if(v!==P.target){say("p-msg","Ajusta el volumen a "+P.target+" µL antes de continuar.","warn");return}}
+ $("p-pl").style.transform=i===1?"translateY(6px)":i===3?"translateY(11px)":"";
+ if(i===2){$("p-src").setAttribute("y",100);$("p-src").setAttribute("height",58)}
+ if(i===3){const hh=Math.max(5,P.target/1000*75);$("p-dst").setAttribute("height",hh);$("p-dst").setAttribute("y",158-hh)}
+ P.step++;if(P.step===5){say("p-msg","Transferencia correcta de "+P.target+" µL con la P"+pip+". Punta desechada.","ok");P.step=0;$("p-pl").style.transform=""}
+ else say("p-msg","Bien. Siguiente: "+stp[P.step])};pNew();
+
+/* MICROSCOPIO */
+const best={4:30,10:55,40:72,100:85};
+function mDraw(){const o=+$("m-obj").value,f=+$("m-foc").value,oil=$("m-oil").checked,blur=Math.min(10,Math.abs(f-best[o])/4),sc=o/4;
+ let c='<defs><radialGradient id="cg"><stop offset="0" stop-color="#c084fc"/><stop offset="1" stop-color="#7e22ce"/></radialGradient></defs>';
+ for(let i=0;i<60;i++){const x=((i*53)%200)-100,y=((i*97)%200)-100;c+=`<circle cx="${x}" cy="${y}" r="${3.5*sc}" fill="url(#cg)" opacity=".8"/><circle cx="${x}" cy="${y}" r="${1.2*sc}" fill="#3b0764"/>`}
+ const dark=o===100&&!oil;$("m-view").style.filter="blur("+blur+"px)";$("m-view").style.opacity=dark?.15:1;$("m-view").innerHTML=c;
+ $("m-mag").textContent="Aumento total: "+o*10+"x (ocular 10x × objetivo "+o+"x)";
+ let t,k;if(oil&&o!==100){t="El aceite solo se usa con el objetivo de 100x. Límpialo con papel óptico.";k="bad"}
+ else if(dark){t="A 100x necesitas aceite de inmersión: la imagen se ve oscura y borrosa.";k="warn"}
+ else if(blur<1){t="Imagen nítida a "+o+"x. Ya puedes observar las células.";k="ok"}
+ else{t="Imagen desenfocada. Ajusta el enfoque"+(o>=40?" con el micrométrico (con cuidado).":".");k="warn"}say("m-msg",t,k)}
+["m-obj","m-foc","m-oil"].forEach(i=>$(i).oninput=mDraw);mDraw();
+</script>
+</body>
+</html>
